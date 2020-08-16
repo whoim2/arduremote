@@ -1,0 +1,6 @@
+//#ifndef USB_PRODUCT
+// If no product is provided, use USB IO Board
+#undef USB_PRODUCT
+#define USB_PRODUCT     "ARDU Remote"
+#define USB_MANUFACTURER "whoim@mail.ru"
+//#endif
