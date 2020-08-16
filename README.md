@@ -10,3 +10,6 @@ May work with QCZEK LRS and other, have PPM pin 8/10 channels.
 Low cost RC controller from old RC parts!
 
 ![alt text](https://github.com/whoim2/arduremote/blob/master/photo_title.jpg?raw=true)
+
+Video from russian users: https://youtu.be/x-7y0d95x8k
+[![Watch the video](https://github.com/whoim2/arduremote/blob/master/photo_title.jpg?raw=true)](https://youtu.be/x-7y0d95x8k)
