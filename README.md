@@ -9,7 +9,7 @@ Have start protection and 30-secs warning if not used.
 May work with QCZEK LRS and other, have PPM pin 8/10 channels.
 Low cost RC controller from old RC parts!
 
-![alt text](https://github.com/whoim2/arduremote/blob/master/shm.bmp?raw=true)
+![alt text](https://github.com/whoim2/arduremote/blob/master/sheme.bmp?raw=true)
 
 If you want use this only as usb joystic, you not need battery, power module, power switch and not need remove fuse on Arduino Pro Micro.
 If you use PPM and LRS, you need set channels count in PPMEncoder.h to 10
