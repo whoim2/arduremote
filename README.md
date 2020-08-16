@@ -20,3 +20,8 @@ If you use PPM and LRS, you need set channels count in PPMEncoder.h to 10
 
 Video for russian users: https://youtu.be/x-7y0d95x8k
 [![Watch the video](https://github.com/whoim2/arduremote/blob/master/photo_title.jpg?raw=true)](https://youtu.be/x-7y0d95x8k)
+
+For calibrate sticks & aux1, press calibrate button and power on, roll/pitch/yaw axis need set in zero position, trottle & aux1 set to minimum. While beeps, move sticks & aux1 from min to max positions.
+If no beeps at time, power off device. Calibrate done.
+
+Short beeps after power on - protection, channels value not in minimum. Off all switchs & move throttle to minimum.
