@@ -10,7 +10,7 @@ May work with QCZEK LRS and other, have PPM pin 8/10 channels.
 
 QCZEK Project: http://qczek.beyondrc.com/qczek-lrs-433mhz-1w-lora-rc-link/
 
-Low cost RC controller from old RC parts!
+Low cost RC controller from old RC parts! 3D models present.
 
 ![alt text](https://github.com/whoim2/arduremote/blob/master/sheme.bmp?raw=true)
 
