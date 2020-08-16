@@ -20,7 +20,9 @@ If you use PPM and LRS, you need set channels count in PPMEncoder.h to 10
 
 Video for russian users: https://youtu.be/x-7y0d95x8k
 [![Watch the video](https://github.com/whoim2/arduremote/blob/master/photo_title.jpg?raw=true)](https://youtu.be/x-7y0d95x8k)
+
 ===
+
 Build:
 1) install Arduino IDE
 2) copy folders from used_libs.zip to Arduino/libraries folder
@@ -28,7 +30,9 @@ Build:
 4) connect Arduino Pro Micro to usb
 5) select pro micro in tools/boards menu, press Upload button in IDE
 6) solder all parts to Arduino, using sheme.bmp
+
 ===
+
 For calibrate sticks & aux1, press calibrate button and power on, before set roll/pitch/yaw axis in zero position, trottle & aux1 set to minimum. While beeps, move sticks & aux1 from min to max positions.
 If no beeps at time, power off device. Calibrate done.
 
