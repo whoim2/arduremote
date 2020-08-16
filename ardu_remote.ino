@@ -102,8 +102,12 @@ void setup() {
   pinMode(SW2_PIN, INPUT_PULLUP);
   pinMode(SW3_1_PIN, INPUT_PULLUP);
   pinMode(SW3_2_PIN, INPUT_PULLUP);
+  #ifdef SW4_PIN
   pinMode(SW4_PIN, INPUT_PULLUP);
+  #endif
+  #ifdef SW5_PIN
   pinMode(SW5_PIN, INPUT_PULLUP);
+  #endif
   pinMode(SW_CALIBRATE_PIN, INPUT_PULLUP);
   
   pinMode(BUZZER_PIN, OUTPUT);
@@ -294,21 +298,27 @@ void loop() {
     ch_crc += sw3+40; 
   #endif
   //sw4
-  uint8_t sw4 = 0;
-  if(digitalRead(SW4_PIN) == LOW) sw4 = 255;
-  #ifdef NTIM
-    ch_crc += sw4+50; 
+  #ifdef SW4_PIN
+    uint8_t sw4 = 0;
+    if(digitalRead(SW4_PIN) == LOW) sw4 = 255;
+    #ifdef NTIM
+      ch_crc += sw4+50; 
+    #endif
   #endif
   //sw5
-  uint8_t sw5 = 0;
-  if(digitalRead(SW5_PIN) == LOW) sw5 = 255;
-  #ifdef NTIM
-    ch_crc += sw5+60; 
+  #ifdef SW5_PIN
+    uint8_t sw5 = 0;
+    if(digitalRead(SW5_PIN) == LOW) sw5 = 255;
+    #ifdef NTIM
+      ch_crc += sw5+60; 
+    #endif
   #endif
   //aux1
-  uint8_t aux1 = map(analogRead(AUX1_PIN),aux1min,aux1max,0,255);
-  #ifdef NTIM
-    ch_crc += aux1; 
+  #ifdef AUX1_PIN
+    uint8_t aux1 = map(analogRead(AUX1_PIN),aux1min,aux1max,0,255);
+    #ifdef NTIM
+      ch_crc += aux1; 
+    #endif
   #endif
   //startup protection
   if(!started) {
@@ -340,9 +350,15 @@ void loop() {
       Serial.print("\tS1: " + String(sw1));
       Serial.print("\tS2: " + String(sw2));
       Serial.print("\tS3: " + String(sw3));
+      #ifdef SW4_PIN
       Serial.print("\tS4: " + String(sw4));
+      #endif
+      #ifdef SW5_PIN
       Serial.print("\tS5: " + String(sw5));
+      #endif
+      #ifdef AUX1_PIN
       Serial.print("\tA1: " + String(aux1));
+      #endif
       Serial.println();
       
       delay(200);
@@ -366,9 +382,15 @@ void loop() {
       Joystick.setYAxisRotation(sw1*1.411);
       Joystick.setZAxisRotation(sw2*1.411);
       Joystick.setThrottle(sw3);
+      #ifdef SW4_PIN
       Joystick.setHatSwitch(1,sw4*1.411);
+      #endif
+      #ifdef SW5_PIN
       Joystick.setHatSwitch(2,sw5*1.411);
+      #endif
+      #ifdef AUX1_PIN
       Joystick.setRudder(aux1);
+      #endif
       Joystick.sendState();
     #endif
 
@@ -383,11 +405,16 @@ void loop() {
       ppmEncoder.setChannel(4, 1000+sw1*3.922);
       ppmEncoder.setChannel(5, 1000+sw2*3.922);
       ppmEncoder.setChannel(6, 1000+sw3*3.922);
+      #ifdef SW4_PIN
       ppmEncoder.setChannel(7, 1000+sw4*3.922);
+      #endif
+      #ifdef SW5_PIN
       ppmEncoder.setChannel(8, 1000+sw5*3.922);
-       //aux
+      #endif
+      //aux
+      #ifdef AUX1_PIN
       ppmEncoder.setChannel(9, 1000+aux1*3.922);
-     
+      #endif
     #endif
   }
   #ifdef NTIM
