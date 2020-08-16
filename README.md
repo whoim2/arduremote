@@ -15,5 +15,5 @@ If you want use this only as usb joystic, you not need battery, power module, po
 If you use PPM and LRS, you need set channels count in PPMEncoder.h to 10
 
 
-Video from russian users: https://youtu.be/x-7y0d95x8k
+Video for russian users: https://youtu.be/x-7y0d95x8k
 [![Watch the video](https://github.com/whoim2/arduremote/blob/master/photo_title.jpg?raw=true)](https://youtu.be/x-7y0d95x8k)
