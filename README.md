@@ -1,5 +1,5 @@
 # arduremote
-ARDU Remote: simple RC radio controller
+ARDU Remote: simple USB / RC radio controller 10 channels
 
 Based on arduino pro micro (atmega32u4), have h/w USB port for use as joystic in any OS.
 Work with Open.HD.
