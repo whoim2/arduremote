@@ -142,8 +142,10 @@ void setup() {
       throttlemin = analogRead(TRTL_PIN);
       EEPROM_int_write(38, throttlemin);
 
+      #ifdef AUX1_PIN
       aux1min = analogRead(AUX1_PIN);
       EEPROM_int_write(46, aux1min);
+      #endif
     
       while(1) { //min and max positions
         #ifdef SERIAL_DEBUG
@@ -194,6 +196,7 @@ void setup() {
            beep(20);
         }
         //aux1
+        #ifdef AUX1_PIN
         if(analogRead(AUX1_PIN) < aux1min) {
            aux1min = analogRead(AUX1_PIN);
            EEPROM_int_write(46, aux1min);
@@ -204,6 +207,7 @@ void setup() {
            EEPROM_int_write(50, aux1max);
            beep(20);
         }
+        #endif
 
         //debug
         #ifdef SERIAL_DEBUG
@@ -211,7 +215,9 @@ void setup() {
           Serial.print("\tP: " + String(pitchmin) + " < " + String(pitchzero) + " > " + String(pitchmax));
           Serial.print("\tT: " + String(throttlemin) + " <> " + String(throttlemax));
           Serial.print("\tY: " + String(yawmin) + " < " + String(yawzero) + " > " + String(yawmax));
+          #ifdef AUX1_PIN
           Serial.print("\tA1: " + String(aux1min) + " <> " + String(aux1max));
+          #endif
           Serial.println();
         #endif
 
@@ -232,8 +238,10 @@ void setup() {
   yawmax =   EEPROM_int_read(34);
   throttlemin =  EEPROM_int_read(38);
   throttlemax =  EEPROM_int_read(42);
+  #ifdef AUX1_PIN
   aux1min =  EEPROM_int_read(46);
   aux1max =  EEPROM_int_read(50);
+  #endif
 
   #ifdef SERIAL_DEBUG
     beep(100);
@@ -322,7 +330,7 @@ void loop() {
   #endif
   //startup protection
   if(!started) {
-      if(throttle<10 && sw1==0 && sw2==0 && sw3==0 && sw4==0 && sw5==0) {
+      if(throttle<10 && sw1==0 && sw2==0 && sw3==0) {
         started = true;
         //start short beep
         beep(200);
@@ -374,11 +382,17 @@ void loop() {
       Joystick.setButton(0,sw1);
       Joystick.setButton(1,sw2);
       Joystick.setYAxisRotation(sw3);
+      #ifdef SW4_PIN
       Joystick.setButton(2,sw4);
+      #endif
+      #ifdef SW5_PIN
       Joystick.setButton(3,sw5);
+      #endif
+      #ifdef AUX1_PIN
       Joystick.setZAxisRotation((aux1+127)*1.411);
+      #endif
       */
-      //for open.hd (max use axis)
+      //for open.hd (use axis)
       Joystick.setYAxisRotation(sw1*1.411);
       Joystick.setZAxisRotation(sw2*1.411);
       Joystick.setThrottle(sw3);
