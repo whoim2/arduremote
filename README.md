@@ -37,3 +37,7 @@ For calibrate sticks & aux1, press calibrate button and power on, before set rol
 If no beeps at time, power off device. Calibrate done.
 
 Short beeps after power on - protection, channels value not in minimum. Off all switchs & move throttle to minimum.
+
+===
+
+You may connect jdy-30 / hc-05/06 bluetooth module to qczek and have mavlink telemetry on android device with Droid Planner 2.8 app. It work with Inav.
