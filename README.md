@@ -41,3 +41,6 @@ Short beeps after power on - protection, channels value not in minimum. Off all 
 ===
 
 You may connect jdy-30 / hc-05/06 bluetooth module to qczek and have mavlink telemetry on android device with "Droid Planner 2.8" or "Telemetry Vieawer" app. It work with Inav / mavlink.
+
+Also, you may connect mavlink-display to QCZEK:
+https://github.com/whoim2/mavlink-display
