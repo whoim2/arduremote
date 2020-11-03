@@ -17,10 +17,10 @@ Low cost RC controller from old RC parts! 3D models present.
 If you want use this only as usb joystic, you not need battery, power module, power switch and not need remove fuse on Arduino Pro Micro.
 If you use PPM and LRS, you need set channels count in PPMEncoder.h to 10
 
-======= SBUS TEST VERSION ========
+== SBUS TEST VERSION ==
 QCZEK >=2.0 have only SBUS input. Try this sketch for it: https://github.com/whoim2/arduremote/blob/SBUS-test/ardu_remote.ino
 Not need external inverter, but need resistors for down voltage from 5v to 3.3v. As for ppm pin on sheme. Connect TX pin arduino to RX pin qczek via resistors.
-==================================
+===
 
 Video for russian users: https://youtu.be/x-7y0d95x8k
 [![Watch the video](https://github.com/whoim2/arduremote/blob/master/photo_title.jpg?raw=true)](https://youtu.be/x-7y0d95x8k)
