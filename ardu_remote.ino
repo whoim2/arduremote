@@ -505,31 +505,31 @@ void loop() {
     //sbus
     #ifdef SBUS
       //axis
-      rcChannels[0] = 1000+(roll+127)*3.937;
-      rcChannels[1] = 1000+(pitch+127)*3.937;
-      rcChannels[2] = 1000+throttle*3.922;
-      rcChannels[3] = 1000+(yaw+127)*3.937;
+      rcChannels[0] = 1003+(roll+127)*3.937;
+      rcChannels[1] = 1003+(pitch+127)*3.937;
+      rcChannels[2] = 1003+throttle*3.922;
+      rcChannels[3] = 1003+(yaw+127)*3.937;
       //sw
-      rcChannels[4] = 1000+sw1*3.922;
-      rcChannels[5] = 1000+sw2*3.922;
-      rcChannels[6] = 1000+sw3*3.922;
+      rcChannels[4] = 1003+sw1*3.922;
+      rcChannels[5] = 1003+sw2*3.922;
+      rcChannels[6] = 1003+sw3*3.922;
       #ifdef SW4_PIN
-      rcChannels[7] = 1000+sw4*3.922;
+      rcChannels[7] = 1003+sw4*3.922;
       #endif
       #ifdef SW5_PIN
-      rcChannels[8] = 1000+sw5*3.922;
+      rcChannels[8] = 1003+sw5*3.922;
       #endif
       //aux
       #ifdef AUX1_PIN
-      rcChannels[9] = 1000+aux1*3.922;
+      rcChannels[9] = 1003+aux1*3.922;
       #endif
       //fill min
-      rcChannels[10] = 1000;
-      rcChannels[11] = 1000;
+      rcChannels[10] = 1003;
+      rcChannels[11] = 1003;
       //qczek settings
-      rcChannels[12] = 1000; //high data rate
-      rcChannels[13] = 1900; //telemetry type
-      rcChannels[14] = 1000; //race mode off
+      rcChannels[12] = 1003; //high data rate
+      rcChannels[13] = 1003; //telemetry type
+      rcChannels[14] = 1003; //race mode off
       
     if (currentMillis > sbusTime) {
         sbusPreparePacket(sbusPacket, rcChannels, false, false);
