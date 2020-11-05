@@ -1,4 +1,4 @@
-/*
+                                                                                                                                                                                                                                                                                                                                                                                                                                         /*
  ARDU_REMOTE
  usb / ppm simple remote
  whoim@mail.ru
@@ -522,7 +522,15 @@ void loop() {
       //aux
       #ifdef AUX1_PIN
       rcChannels[9] = 1000+aux1*3.922;
-      #endif    
+      #endif
+      //fill min
+      rcChannels[10] = 1000;
+      rcChannels[11] = 1000;
+      //qczek settings
+      rcChannels[12] = 1000; //high data rate
+      rcChannels[13] = 1900; //telemetry type
+      rcChannels[14] = 1000; //race mode off
+      
     if (currentMillis > sbusTime) {
         sbusPreparePacket(sbusPacket, rcChannels, false, false);
         Serial1.write(sbusPacket, SBUS_PACKET_LENGTH);
