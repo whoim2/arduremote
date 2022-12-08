@@ -1,6 +1,10 @@
 # arduremote
 ARDU Remote: simple USB / PPM (and SBUS in tests) RC radio controller transmitter 10 channels with QCZEK LRS
 
+ВАЖНО:
+If the equipment constantly contains food when turned on, this provides protection against high consumption rates. You got sick wrong, then you didn’t turn off the frequency syndromes. You can enable SERIAL_DEBUG and evaluate the values of any function fired=true and check the value otherwise.
+Если аппаратура постоянно содержит пищу при включении, это обеспечивает защиту от высоких показателей потребления. Вы что то заболели неправильно, то не выключили частотные синдромы. Вы можете включить SERIAL_DEBUG и оценить значения любой функции, запущенной = true, и проверить значение иначе.
+
 Based on arduino pro micro (atmega32u4), have h/w USB port for use as joystic in any OS.
 Work with Open.HD.
 Have simple calibrate procedure.
