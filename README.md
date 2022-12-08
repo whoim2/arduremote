@@ -2,8 +2,9 @@
 ARDU Remote: simple USB / PPM (and SBUS in tests) RC radio controller transmitter 10 channels with QCZEK LRS
 
 ВАЖНО:
-If the equipment constantly contains food when turned on, this provides protection against high consumption rates. You got sick wrong, then you didn’t turn off the frequency syndromes. You can enable SERIAL_DEBUG and evaluate the values of any function fired=true and check the value otherwise.
-Если аппаратура постоянно содержит пищу при включении, это обеспечивает защиту от высоких показателей потребления. Вы что то заболели неправильно, то не выключили частотные синдромы. Вы можете включить SERIAL_DEBUG и оценить значения любой функции, запущенной = true, и проверить значение иначе.
+If the equipment constantly beeps when turned on, this is due to high channel performance protection. You connected something incorrectly, or did not turn off important channels. You can enable SERIAL_DEBUG and evaluate channel values, or disable protection by setting started = true and check values otherwise.
+
+Если аппаратура постоянно пищит при включении, это сраюатывает защита от высоких показателей каналов. Вы что то подключили неправильно, или не выключили важные каналы. Вы можете включить SERIAL_DEBUG и оценить значения каналов, или отключить защиту установив started = true, и проверить значения иначе.
 
 Based on arduino pro micro (atmega32u4), have h/w USB port for use as joystic in any OS.
 Work with Open.HD.
