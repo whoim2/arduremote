@@ -1,7 +1,10 @@
 # arduremote
 ARDU Remote: simple USB / PPM (and SBUS in tests) RC radio controller transmitter 10 channels with QCZEK LRS
 
-ВАЖНО:
+### updates:
+21/03/2023 8 axes and 2 buttons in usb joystic mode, custom changes in ArduinoJoystickLibrary - download used_libs.zip!
+
+### ВАЖНО:
 If the equipment constantly beeps when turned on, this is due to high channel performance protection. You connected something incorrectly, or did not turn off important channels. You can enable SERIAL_DEBUG and evaluate channel values, or disable protection by setting started = true and check values otherwise.
 
 Если аппаратура постоянно пищит при включении, это срабатывает защита от высоких показателей каналов. Вы что то подключили неправильно, или не выключили важные каналы. Вы можете включить SERIAL_DEBUG и оценить значения каналов, или отключить защиту установив started = true, и проверить значения иначе.
