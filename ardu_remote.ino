@@ -1,12 +1,19 @@
-/*
+/* 
  ARDU_REMOTE
  usb / ppm simple remote
  whoim@mail.ru
 */
 
 #include <EEPROM.h>
-#include <Joystick.h>
+#include <JoystickMHX.h>
 #include "PPMEncoder.h"
+
+Joystick_ Joystick(JOYSTICK_DEFAULT_REPORT_ID,JOYSTICK_TYPE_JOYSTICK,
+  32, 2,                  // Button Count, Hat Switch Count
+  true, true, true,     // X and Y, Z Axis
+  true, true, true,   // Rx, Ry,  Rz
+  true, true, true, true,  // slider, dial, rudder and throttle
+  false, false, false);  // accelerator, brake, and steering
 
 //uncomment this for see states in port monitor, 9600bps
 //usb joystic not work, comment for usb mode
@@ -30,11 +37,32 @@
 #define SW_CALIBRATE_PIN  5
 
 //PPM output, comment to disable
-#define PPM_PIN 9
+//#define PPM_PIN 9
+//SBUS output, comment to disable (tx pin of seria1)
+#define SBUS
 
 //non-use beep timer millis, comment to disable
-#define NTIM 30000
+//#define NTIM 30000
 
+
+// sbus settings
+#define RC_CHANNEL_MIN 990
+#define RC_CHANNEL_MAX 2010
+
+#define SBUS_MIN_OFFSET 173
+#define SBUS_MID_OFFSET 992
+#define SBUS_MAX_OFFSET 1811
+#define SBUS_CHANNEL_NUMBER 16
+#define SBUS_PACKET_LENGTH 25
+#define SBUS_FRAME_HEADER 0x0f
+#define SBUS_FRAME_FOOTER 0x00
+#define SBUS_FRAME_FOOTER_V2 0x04
+#define SBUS_STATE_FAILSAFE 0x08
+#define SBUS_STATE_SIGNALLOSS 0x04
+#define SBUS_UPDATE_RATE 15 //ms
+//
+
+//sketch
 bool started = false;
 
 //calibrate vars
@@ -49,6 +77,12 @@ int aux1max,aux1min;
 #ifdef NTIM
 uint32_t prevtimer = millis();
 int16_t prev_ch_crc;
+#endif
+
+#ifdef SBUS
+uint8_t sbusPacket[SBUS_PACKET_LENGTH];
+int rcChannels[SBUS_CHANNEL_NUMBER];
+uint32_t sbusTime = 0;
 #endif
 
 //********* FUNCTIONS ***********
@@ -67,9 +101,58 @@ int EEPROM_int_read(int addr) {
 void beep(uint16_t time) {
   digitalWrite(LED_PIN, LOW);
   tone(BUZZER_PIN, 1000);
-  delay(time);
+  delay(time / 10);
   noTone(BUZZER_PIN);
   digitalWrite(LED_PIN, HIGH);
+}
+
+//sbus functions
+void sbusPreparePacket(uint8_t packet[], int channels[], bool isSignalLoss, bool isFailsafe){
+
+    static int output[SBUS_CHANNEL_NUMBER] = {0};
+
+    /*
+     * Map 1000-2000 with middle at 1500 chanel values to
+     * 173-1811 with middle at 992 S.BUS protocol requires
+     */
+    for (uint8_t i = 0; i < SBUS_CHANNEL_NUMBER; i++) {
+        output[i] = map(channels[i], RC_CHANNEL_MIN, RC_CHANNEL_MAX, SBUS_MIN_OFFSET, SBUS_MAX_OFFSET);
+    }
+
+    uint8_t stateByte = 0x00;
+    if (isSignalLoss) {
+        stateByte |= SBUS_STATE_SIGNALLOSS;
+    }
+    if (isFailsafe) {
+        stateByte |= SBUS_STATE_FAILSAFE;
+    }
+    packet[0] = SBUS_FRAME_HEADER; //Header 
+
+    packet[1] = (uint8_t) (output[0] & 0x07FF);
+    packet[2] = (uint8_t) ((output[0] & 0x07FF)>>8 | (output[1] & 0x07FF)<<3);
+    packet[3] = (uint8_t) ((output[1] & 0x07FF)>>5 | (output[2] & 0x07FF)<<6);
+    packet[4] = (uint8_t) ((output[2] & 0x07FF)>>2);
+    packet[5] = (uint8_t) ((output[2] & 0x07FF)>>10 | (output[3] & 0x07FF)<<1);
+    packet[6] = (uint8_t) ((output[3] & 0x07FF)>>7 | (output[4] & 0x07FF)<<4);
+    packet[7] = (uint8_t) ((output[4] & 0x07FF)>>4 | (output[5] & 0x07FF)<<7);
+    packet[8] = (uint8_t) ((output[5] & 0x07FF)>>1);
+    packet[9] = (uint8_t) ((output[5] & 0x07FF)>>9 | (output[6] & 0x07FF)<<2);
+    packet[10] = (uint8_t) ((output[6] & 0x07FF)>>6 | (output[7] & 0x07FF)<<5);
+    packet[11] = (uint8_t) ((output[7] & 0x07FF)>>3);
+    packet[12] = (uint8_t) ((output[8] & 0x07FF));
+    packet[13] = (uint8_t) ((output[8] & 0x07FF)>>8 | (output[9] & 0x07FF)<<3);
+    packet[14] = (uint8_t) ((output[9] & 0x07FF)>>5 | (output[10] & 0x07FF)<<6);  
+    packet[15] = (uint8_t) ((output[10] & 0x07FF)>>2);
+    packet[16] = (uint8_t) ((output[10] & 0x07FF)>>10 | (output[11] & 0x07FF)<<1);
+    packet[17] = (uint8_t) ((output[11] & 0x07FF)>>7 | (output[12] & 0x07FF)<<4);
+    packet[18] = (uint8_t) ((output[12] & 0x07FF)>>4 | (output[13] & 0x07FF)<<7);
+    packet[19] = (uint8_t) ((output[13] & 0x07FF)>>1);
+    packet[20] = (uint8_t) ((output[13] & 0x07FF)>>9 | (output[14] & 0x07FF)<<2);
+    packet[21] = (uint8_t) ((output[14] & 0x07FF)>>6 | (output[15] & 0x07FF)<<5);
+    packet[22] = (uint8_t) ((output[15] & 0x07FF)>>3);
+
+    packet[23] = stateByte; //Flags byte
+    packet[24] = SBUS_FRAME_FOOTER; //Footer
 }
 
 //********* SETUP ***********
@@ -79,24 +162,30 @@ void setup() {
   #ifdef SERIAL_DEBUG //if debug
     Serial.begin(9600);
   #else
-    Joystick.begin(false);
-    Joystick.setThrottle(0);
-    Joystick.setRudder(0);
-    Joystick.setXAxis(0);
-    Joystick.setYAxis(0);
-    Joystick.setXAxis(0);
-    Joystick.setXAxisRotation(0);
-    Joystick.setYAxisRotation(0);
-    Joystick.setZAxisRotation(0);
-    Joystick.setHatSwitch(1,0);
-    Joystick.setHatSwitch(2,0);
+    Joystick.begin();
+    
+    Joystick.setXAxisRange(-127, 127);
+    Joystick.setYAxisRange(-127, 127);
+    Joystick.setZAxisRange(-127, 127);
+    Joystick.setRxAxisRange(-127, 127);
+    Joystick.setRyAxisRange(-127, 127);
+    Joystick.setRzAxisRange(-127, 127);
+    Joystick.setSliderRange(0, 255);
+    Joystick.setDialRange(0, 255);
+    Joystick.setRudderRange(0, 255);
+    Joystick.setThrottleRange(0, 255);
+
+    Joystick.setRudder(127);
+    Joystick.setAccelerator(127);
+    Joystick.setBrake(127);
+    Joystick.setSteering(127);
   #endif
 
   //ppm
   #ifdef PPM_PIN
     ppmEncoder.begin(PPM_PIN);
   #endif
-  
+
   //pins
   pinMode(SW1_PIN, INPUT_PULLUP);
   pinMode(SW2_PIN, INPUT_PULLUP);
@@ -112,6 +201,14 @@ void setup() {
   
   pinMode(BUZZER_PIN, OUTPUT);
   pinMode(LED_PIN, OUTPUT);
+
+  //sbus
+  #ifdef SBUS
+  for (uint8_t i = 0; i < SBUS_CHANNEL_NUMBER; i++) {
+      rcChannels[i] = 1500;
+  }
+  Serial1.begin(100000, SERIAL_8E2);
+  #endif
   
   //start led
   digitalWrite(LED_PIN, HIGH);
@@ -142,10 +239,8 @@ void setup() {
       throttlemin = analogRead(TRTL_PIN);
       EEPROM_int_write(38, throttlemin);
 
-      #ifdef AUX1_PIN
       aux1min = analogRead(AUX1_PIN);
       EEPROM_int_write(46, aux1min);
-      #endif
     
       while(1) { //min and max positions
         #ifdef SERIAL_DEBUG
@@ -196,7 +291,6 @@ void setup() {
            beep(20);
         }
         //aux1
-        #ifdef AUX1_PIN
         if(analogRead(AUX1_PIN) < aux1min) {
            aux1min = analogRead(AUX1_PIN);
            EEPROM_int_write(46, aux1min);
@@ -207,7 +301,6 @@ void setup() {
            EEPROM_int_write(50, aux1max);
            beep(20);
         }
-        #endif
 
         //debug
         #ifdef SERIAL_DEBUG
@@ -215,9 +308,7 @@ void setup() {
           Serial.print("\tP: " + String(pitchmin) + " < " + String(pitchzero) + " > " + String(pitchmax));
           Serial.print("\tT: " + String(throttlemin) + " <> " + String(throttlemax));
           Serial.print("\tY: " + String(yawmin) + " < " + String(yawzero) + " > " + String(yawmax));
-          #ifdef AUX1_PIN
           Serial.print("\tA1: " + String(aux1min) + " <> " + String(aux1max));
-          #endif
           Serial.println();
         #endif
 
@@ -238,10 +329,8 @@ void setup() {
   yawmax =   EEPROM_int_read(34);
   throttlemin =  EEPROM_int_read(38);
   throttlemax =  EEPROM_int_read(42);
-  #ifdef AUX1_PIN
   aux1min =  EEPROM_int_read(46);
   aux1max =  EEPROM_int_read(50);
-  #endif
 
   #ifdef SERIAL_DEBUG
     beep(100);
@@ -259,6 +348,8 @@ void setup() {
 
 //********* LOOP ***********
 void loop() {
+  uint32_t currentMillis = millis();
+  
   #ifdef NTIM
     int16_t ch_crc = 0; 
   #endif
@@ -330,7 +421,7 @@ void loop() {
   #endif
   //startup protection
   if(!started) {
-      if(throttle<10 && sw1==0 && sw2==0 && sw3==0) {
+      if(throttle<10 && sw1==0 && sw2==0 && sw3==0 && sw4==0 && sw5==0) {
         started = true;
         //start short beep
         beep(200);
@@ -370,43 +461,43 @@ void loop() {
       Serial.println();
       
       delay(200);
-    #else
+    #else //no debug
       //sticks
       Joystick.setXAxis(roll);
       Joystick.setYAxis(pitch);
       Joystick.setZAxis(throttle-127);
-      Joystick.setXAxisRotation((yaw+127)*1.411);
+      Joystick.setRxAxis(yaw);
       
       //for pc/games (use setbutton)
       /*
       Joystick.setButton(0,sw1);
       Joystick.setButton(1,sw2);
-      Joystick.setYAxisRotation(sw3);
-      #ifdef SW4_PIN
+      Joystick.setRyAxis(sw3);
       Joystick.setButton(2,sw4);
-      #endif
-      #ifdef SW5_PIN
       Joystick.setButton(3,sw5);
-      #endif
-      #ifdef AUX1_PIN
-      Joystick.setZAxisRotation((aux1+127)*1.411);
-      #endif
+      Joystick.setRzAxis((aux1+127)*1.411);
       */
-      //for open.hd (use axis)
-      Joystick.setYAxisRotation(sw1*1.411);
-      Joystick.setZAxisRotation(sw2*1.411);
-      Joystick.setThrottle(sw3);
+      //for open.hd (max use axis)
+      Joystick.setRyAxis(sw1*1.411);
+      Joystick.setRzAxis(sw2*1.411);
+      Joystick.setSlider(sw3);
       #ifdef SW4_PIN
-      Joystick.setHatSwitch(1,sw4*1.411);
+      //if(sw4 == 255) Joystick.setHatSwitch(0, 90); else Joystick.setHatSwitch(0, 270);
+      Joystick.setButton(0,sw4);
+      Joystick.setRudder(sw4);
       #endif
       #ifdef SW5_PIN
-      Joystick.setHatSwitch(2,sw5*1.411);
+      //if(sw5 == 0) Joystick.setHatSwitch(1, 90); else Joystick.setHatSwitch(1, 270);
+      Joystick.setButton(1,sw5);
+      Joystick.setThrottle(sw5);
       #endif
       #ifdef AUX1_PIN
-      Joystick.setRudder(aux1);
+      //Joystick.setSlider(aux1);
+      Joystick.setDial(aux1);
+      //Joystick.setRudder(aux1);
       #endif
       Joystick.sendState();
-    #endif
+    #endif //debug
 
     //ppm
     #ifdef PPM_PIN
@@ -429,13 +520,49 @@ void loop() {
       #ifdef AUX1_PIN
       ppmEncoder.setChannel(9, 1000+aux1*3.922);
       #endif
-    #endif
-  }
+    #endif //ppm
+    //sbus
+    #ifdef SBUS
+      //axis
+      rcChannels[0] = 1003+(roll+127)*3.937;
+      rcChannels[1] = 1003+(pitch+127)*3.937;
+      rcChannels[2] = 1003+throttle*3.922;
+      rcChannels[3] = 1003+(yaw+127)*3.937;
+      //sw
+      rcChannels[4] = 1003+sw1*3.922;
+      rcChannels[5] = 1003+sw2*3.922;
+      rcChannels[6] = 1003+sw3*3.922;
+      #ifdef SW4_PIN
+      rcChannels[7] = 1003+sw4*3.922;
+      #endif
+      #ifdef SW5_PIN
+      rcChannels[8] = 1003+sw5*3.922;
+      #endif
+      //aux
+      #ifdef AUX1_PIN
+      rcChannels[9] = 1003+aux1*3.922;
+      #endif
+      //fill min
+      rcChannels[10] = 1003;
+      rcChannels[11] = 1003;
+      //qczek settings for 2.1
+      rcChannels[12] = 903; //high data rate 13ch
+      rcChannels[13] = 903; //telemetry type 14ch
+      rcChannels[14] = 903; //race mode 15ch
+      
+    if (currentMillis > sbusTime) {
+        sbusPreparePacket(sbusPacket, rcChannels, false, false);
+        Serial1.write(sbusPacket, SBUS_PACKET_LENGTH);
+
+        sbusTime = currentMillis + SBUS_UPDATE_RATE;
+    }
+    #endif //sbus
+  } //debug
   #ifdef NTIM
   if((prevtimer + NTIM) < millis()) {
       prevtimer = millis();
       if(ch_crc == prev_ch_crc) beep(10);
       prev_ch_crc = ch_crc;
   }
-  #endif
+  #endif //ntim
 }
