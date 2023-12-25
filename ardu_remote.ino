@@ -38,8 +38,12 @@ Joystick_ Joystick(JOYSTICK_DEFAULT_REPORT_ID,JOYSTICK_TYPE_JOYSTICK,
 
 //PPM output, comment to disable
 //#define PPM_PIN 9
-//SBUS output, comment to disable (tx pin of seria1)
-#define SBUS
+
+//SBUS output, comment to disable (tx pin of serial)
+//#define SBUS
+
+//UART output for jdy-40/41
+#define UART
 
 //non-use beep timer millis, comment to disable
 //#define NTIM 30000
@@ -59,8 +63,10 @@ Joystick_ Joystick(JOYSTICK_DEFAULT_REPORT_ID,JOYSTICK_TYPE_JOYSTICK,
 #define SBUS_FRAME_FOOTER_V2 0x04
 #define SBUS_STATE_FAILSAFE 0x08
 #define SBUS_STATE_SIGNALLOSS 0x04
-#define SBUS_UPDATE_RATE 15 //ms
+#define SBUS_UPDATE_RATE 10 //ms
+
 //
+#define UART_UPDATE_RATE 20 //ms
 
 //sketch
 bool started = false;
@@ -73,6 +79,12 @@ int throttlemax, throttlemin;
 #ifdef AUX1_PIN
 int aux1max,aux1min;
 #endif
+uint32_t joyTime = 0;
+#define JOY_UPDATE_RATE 15 //ms
+
+uint8_t ch13_val = 0;
+uint8_t ch14_val = 0;
+uint8_t ch15_val = 0;
 
 #ifdef NTIM
 uint32_t prevtimer = millis();
@@ -83,6 +95,10 @@ int16_t prev_ch_crc;
 uint8_t sbusPacket[SBUS_PACKET_LENGTH];
 int rcChannels[SBUS_CHANNEL_NUMBER];
 uint32_t sbusTime = 0;
+#endif
+
+#ifdef UART
+uint32_t uartTime = 0;
 #endif
 
 //********* FUNCTIONS ***********
@@ -160,7 +176,7 @@ void setup() {
   
   //serial
   #ifdef SERIAL_DEBUG //if debug
-    Serial.begin(9600);
+    Serial.begin(115200);
   #else
     Joystick.begin();
     
@@ -181,11 +197,6 @@ void setup() {
     Joystick.setSteering(127);
   #endif
 
-  //ppm
-  #ifdef PPM_PIN
-    ppmEncoder.begin(PPM_PIN);
-  #endif
-
   //pins
   pinMode(SW1_PIN, INPUT_PULLUP);
   pinMode(SW2_PIN, INPUT_PULLUP);
@@ -202,12 +213,22 @@ void setup() {
   pinMode(BUZZER_PIN, OUTPUT);
   pinMode(LED_PIN, OUTPUT);
 
+  //ppm
+  #ifdef PPM_PIN
+    ppmEncoder.begin(PPM_PIN);
+  #endif
+
   //sbus
   #ifdef SBUS
   for (uint8_t i = 0; i < SBUS_CHANNEL_NUMBER; i++) {
       rcChannels[i] = 1500;
   }
   Serial1.begin(100000, SERIAL_8E2);
+  #endif
+
+  //uart
+  #ifdef UART
+  Serial1.begin(38400); //jdy-41 baud
   #endif
   
   //start led
@@ -304,6 +325,7 @@ void setup() {
 
         //debug
         #ifdef SERIAL_DEBUG
+          Serial.print("CAL# ");
           Serial.print("R: " + String(rollmin) + " < " + String(rollzero) + " > " + String(rollmax));
           Serial.print("\tP: " + String(pitchmin) + " < " + String(pitchzero) + " > " + String(pitchmax));
           Serial.print("\tT: " + String(throttlemin) + " <> " + String(throttlemax));
@@ -335,6 +357,7 @@ void setup() {
   #ifdef SERIAL_DEBUG
     beep(100);
     delay(3000);
+    Serial.println("CALIBRATION DATA");
     Serial.print("R: " + String(rollmin) + " < " + String(rollzero) + " > " + String(rollmax));
     Serial.print("\tP: " + String(pitchmin) + " < " + String(pitchzero) + " > " + String(pitchmax));
     Serial.print("\tT: " + String(throttlemin) + " <> " + String(throttlemax));
@@ -342,6 +365,18 @@ void setup() {
     #ifdef AUX1_PIN
     Serial.print("\tA1: " + String(aux1min) + " <> " + String(aux1max));
     #endif
+    Serial.println();
+
+    #ifdef PPM_PIN
+    Serial.println("mode PPM");
+    #endif
+    #ifdef SBUS
+    Serial.println("mode SBUS");
+    #endif
+    #ifdef UART
+    Serial.println("mode UART");
+    #endif
+      
     delay(3000);
   #endif
 }
@@ -419,6 +454,23 @@ void loop() {
       ch_crc += aux1; 
     #endif
   #endif
+  if(digitalRead(SW_CALIBRATE_PIN) == LOW) {
+    if(yaw < -100) { //yaw left and calibrate swap racemode
+      beep(100);
+      if(ch14_val == 0) { ch14_val = 255; delay(50); beep(100); }
+      else ch14_val = 0;
+    }
+    else if(yaw > 100) { //yaw right set power as trottle
+      beep(100);
+      ch15_val = throttle;
+    }
+    else {
+      beep(100);
+      if(ch13_val == 0) { ch13_val = 255; delay(50); beep(100); }
+      else ch13_val = 0;
+    }
+    delay(300);
+  }
   //startup protection
   if(!started) {
       if(throttle<10 && sw1==0 && sw2==0 && sw3==0 && sw4==0 && sw5==0) {
@@ -482,21 +534,21 @@ void loop() {
       Joystick.setRzAxis(sw2*1.411);
       Joystick.setSlider(sw3);
       #ifdef SW4_PIN
-      //if(sw4 == 255) Joystick.setHatSwitch(0, 90); else Joystick.setHatSwitch(0, 270);
-      Joystick.setButton(0,sw4);
+      //Joystick.setButton(0,sw4);
       Joystick.setRudder(sw4);
       #endif
       #ifdef SW5_PIN
-      //if(sw5 == 0) Joystick.setHatSwitch(1, 90); else Joystick.setHatSwitch(1, 270);
-      Joystick.setButton(1,sw5);
+      //Joystick.setButton(1,sw5);
       Joystick.setThrottle(sw5);
       #endif
       #ifdef AUX1_PIN
-      //Joystick.setSlider(aux1);
       Joystick.setDial(aux1);
-      //Joystick.setRudder(aux1);
       #endif
-      Joystick.sendState();
+      if (currentMillis > joyTime) {
+          Joystick.sendState();
+          joyTime = currentMillis + JOY_UPDATE_RATE;
+      }
+      
     #endif //debug
 
     //ppm
@@ -533,7 +585,7 @@ void loop() {
       rcChannels[5] = 1003+sw2*3.922;
       rcChannels[6] = 1003+sw3*3.922;
       #ifdef SW4_PIN
-      rcChannels[7] = 1003+sw4*3.922;
+      rcChannels[7] = 1003+sw4*3.937;
       #endif
       #ifdef SW5_PIN
       rcChannels[8] = 1003+sw5*3.922;
@@ -546,17 +598,42 @@ void loop() {
       rcChannels[10] = 1003;
       rcChannels[11] = 1003;
       //qczek settings for 2.1
-      rcChannels[12] = 903; //high data rate 13ch
-      rcChannels[13] = 903; //telemetry type 14ch
-      rcChannels[14] = 903; //race mode 15ch
+      rcChannels[12] = ch13_val;
+      rcChannels[13] = ch14_val; //14
+      rcChannels[14] = ch15_val; //15ch
       
     if (currentMillis > sbusTime) {
         sbusPreparePacket(sbusPacket, rcChannels, false, false);
         Serial1.write(sbusPacket, SBUS_PACKET_LENGTH);
-
         sbusTime = currentMillis + SBUS_UPDATE_RATE;
     }
     #endif //sbus
+    #ifdef UART
+    byte uart_data[18] = {
+      (uint8_t)0x15,
+      (uint8_t)0x37,
+      (uint8_t)0xFA,
+      (int8_t)roll,
+      (int8_t)pitch,
+      (uint8_t)throttle,
+      (int8_t)yaw,
+      (uint8_t)sw1,
+      (uint8_t)sw2,
+      (uint8_t)sw3,
+      (uint8_t)sw4,
+      (uint8_t)sw5,
+      (uint8_t)aux1,
+      (uint8_t)0,
+      (uint8_t)0,
+      (uint8_t)ch13_val,
+      (uint8_t)ch14_val,
+      (uint8_t)ch15_val,
+      };
+    if (currentMillis > uartTime) {
+        Serial1.write(uart_data, 18);
+        uartTime = currentMillis + UART_UPDATE_RATE;
+    }
+    #endif //uart
   } //debug
   #ifdef NTIM
   if((prevtimer + NTIM) < millis()) {
